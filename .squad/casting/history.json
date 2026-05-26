@@ -1,0 +1,11 @@
+{
+  "assignments": [
+    {
+      "assignment_id": "sharepoint-commander-init-001",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "agents": ["Jupiter", "Minerva", "Vulcan", "Mercury", "Janus", "Diana", "Mars", "Fides"],
+      "exempt": ["Scribe", "Ralph"]
+    }
+  ]
+}

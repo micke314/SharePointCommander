@@ -1,0 +1,84 @@
+{
+  "agents": {
+    "jupiter": {
+      "persistent_name": "Jupiter",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Lead / Product Owner"
+    },
+    "minerva": {
+      "persistent_name": "Minerva",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "UI/UX Engineer"
+    },
+    "vulcan": {
+      "persistent_name": "Vulcan",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Frontend Engineer"
+    },
+    "mercury": {
+      "persistent_name": "Mercury",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "API Engineer"
+    },
+    "janus": {
+      "persistent_name": "Janus",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Performance Engineer"
+    },
+    "diana": {
+      "persistent_name": "Diana",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "QA / Tester"
+    },
+    "mars": {
+      "persistent_name": "Mars",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Security Engineer"
+    },
+    "fides": {
+      "persistent_name": "Fides",
+      "universe": "Roman Gods",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Documentation"
+    },
+    "scribe": {
+      "persistent_name": "Scribe",
+      "universe": "exempt",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Session Logger"
+    },
+    "ralph": {
+      "persistent_name": "Ralph",
+      "universe": "exempt",
+      "created_at": "2026-05-26T13:40:40+02:00",
+      "legacy_named": false,
+      "status": "active",
+      "role": "Work Monitor"
+    }
+  }
+}
