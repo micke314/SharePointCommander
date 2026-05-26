@@ -5,7 +5,7 @@
 Paste this directly into a browser bookmark URL/location field:
 
 ```text
-javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now()).then(function(r){return r.text()}).then(function(t){eval(t);sp_commander()}).catch(function(e){console.error('SP Commander load failed:',e)})})();
+javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){eval(t);sp_commander()}).catch(function(e){console.error('SP Commander load failed:',e)})})();
 ```
 
 > Current branch target: `dev`. On release, switch the URL path from `/dev/` to `/main/`.
@@ -16,7 +16,7 @@ javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePo
 
 ```js
 // SharePoint Commander — load from GitHub
-fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now())
+fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now(),{cache:'no-store'})
   .then(function(r){return r.text()})
   .then(function(t){eval(t);console.log('SharePoint Commander loaded. Run: sp_commander()')})
   .catch(function(e){console.error('SP Commander load failed:',e)});

@@ -30,7 +30,7 @@ Browser (SharePoint page)
 5. Navigate to any SharePoint page and click the bookmark.
 
 ```text
-javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now()).then(function(r){return r.text()}).then(function(t){eval(t);sp_commander()}).catch(function(e){console.error('SP Commander load failed:',e)})})();
+javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.text()}).then(function(t){eval(t);sp_commander()}).catch(function(e){console.error('SP Commander load failed:',e)})})();
 ```
 
 **Chrome / Edge:** Right-click the bookmarks bar → *Add page* → paste into the URL field.  
@@ -45,7 +45,7 @@ javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePo
 Open the browser DevTools console on any SharePoint page and paste:
 
 ```js
-fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now())
+fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now(),{cache:'no-store'})
   .then(r => r.text())
   .then(t => { eval(t); sp_commander(); })
   .catch(e => console.error('Load failed:', e));
@@ -121,4 +121,4 @@ Active development happens on the `dev` branch. The bookmarklet above points to 
 
 ## Version
 
-Current version: `0.2.5`
+Current version: `0.2.8`

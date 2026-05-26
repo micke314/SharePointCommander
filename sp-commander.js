@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.2.7',
+    version: '0.2.8',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
