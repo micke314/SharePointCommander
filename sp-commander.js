@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.0',
+    version: '0.3.1',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -857,9 +857,23 @@
       State.selectedIndex = Math.max(0, Math.min(items.length - 1, State.selectedIndex + step));
     }
     renderList();
-    const selectedEl = document.querySelector('#spc-list .spc-selected');
-    if (selectedEl) {
-      selectedEl.scrollIntoView({ block: 'nearest' });
+    scrollSelectedIntoView();
+  }
+
+  function scrollSelectedIntoView() {
+    const list = document.getElementById('spc-list');
+    const selected = list && list.querySelector('.spc-selected');
+    if (!list || !selected) return;
+
+    const listTop = list.scrollTop;
+    const listBottom = listTop + list.clientHeight;
+    const itemTop = selected.offsetTop;
+    const itemBottom = itemTop + selected.offsetHeight;
+
+    if (itemBottom > listBottom) {
+      list.scrollTop = itemBottom - list.clientHeight;
+    } else if (itemTop < listTop) {
+      list.scrollTop = itemTop;
     }
   }
 
