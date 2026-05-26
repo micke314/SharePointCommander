@@ -401,6 +401,7 @@
           }
 
           #spc-list {
+            grid-row: 3;
             position: relative;
             min-height: 0;
             margin: 0;
@@ -486,6 +487,7 @@
           }
 
           #spc-statusbar {
+            grid-row: 4;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -511,6 +513,7 @@
           }
 
           #spc-fnbar {
+            grid-row: 5;
             display: flex;
             gap: 0;
             background: #000000;
