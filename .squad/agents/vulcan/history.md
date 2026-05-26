@@ -3,6 +3,8 @@
 - 2026-05-26T13:53:12.170+02:00 — Kept the scaffold as a single IIFE with one overlay-level `keydown` dispatcher so focus stays trapped without touching `document` listeners.
 - 2026-05-26T13:53:12.170+02:00 — Mock navigation reuses the same static dataset but rewrites child URLs from the current path, which keeps folder/file behavior testable before live SharePoint API wiring exists.
 - 2026-05-26T13:53:12.170+02:00 — Limited repeat DOM churn to `#spc-list` innerHTML updates while path, status, filter, and help are patched surgically on existing nodes.
+- 2026-05-26T14:05:06.305+02:00 — Matched the injected overlay markup to Minerva's CSS contract (`#spc-pathbar`, `#spc-filterbar`, `#spc-statusbar`, `aria-selected`, kind modifiers) so the inlined styles and DOM stay locked together.
+- 2026-05-26T14:05:06.305+02:00 — Focus recovery must return to the active control, not just the overlay root: in filter mode the input gets focus back, while Esc now unwinds filter → help → overlay in the right order.
 - 2026-05-26T14:09:31.683+02:00 — A GitHub-hosted bookmarklet loader should stay as a single-line `javascript:` IIFE with `Date.now()` cache busting, while the DevTools variant can stay readable and include a load confirmation.
 
 ## Project Context (Day 1)

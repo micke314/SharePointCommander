@@ -5,10 +5,12 @@
   const Config = {
     version: '0.1.0-scaffold',
     overlayId: 'spc-overlay',
+    pathBarId: 'spc-pathbar',
+    pathId: 'spc-current-path',
+    filterBarId: 'spc-filterbar',
+    filterId: 'spc-filter-input',
     listId: 'spc-list',
-    pathId: 'spc-path',
-    statusId: 'spc-status',
-    filterId: 'spc-filter',
+    statusId: 'spc-statusbar',
     helpId: 'spc-help',
     title: 'SharePoint Commander',
     rootPath: '/',
@@ -106,6 +108,21 @@
     return document.getElementById(Config.overlayId);
   }
 
+  function focusActiveTarget() {
+    if (State.filterActive) {
+      const inputEl = document.getElementById(Config.filterId);
+      if (inputEl) {
+        inputEl.focus();
+        return;
+      }
+    }
+
+    const overlayEl = getOverlay();
+    if (overlayEl) {
+      overlayEl.focus();
+    }
+  }
+
   function getFilteredItems() {
     if (!State.filter) {
       return State.items.slice();
@@ -147,21 +164,22 @@
     clampSelection(items);
 
     if (!items.length) {
-      listEl.innerHTML = '<div class="spc-row spc-empty">  No matching items</div>';
+      listEl.innerHTML = '<li class="spc-empty">No matching items</li>';
       renderStatusBar();
       return;
     }
 
     listEl.innerHTML = items.map(function(item, index) {
       const isSelected = index === State.selectedIndex;
-      const marker = isSelected ? '&gt;' : '&nbsp;';
-      const kind = item.type === 'folder' ? '[D]' : '[F]';
+      const kindLabel = item.type === 'folder' ? '[D]' : '[F]';
+      const kindClass = item.type === 'folder' ? 'spc-kind--folder' : 'spc-kind--file';
+      const meta = item.type === 'folder' ? 'Folder' : 'File';
       return '' +
-        '<div class="spc-row' + (isSelected ? ' is-selected' : '') + '" data-index="' + index + '">' +
-          '<span class="spc-marker">' + marker + '</span>' +
-          '<span class="spc-kind">' + kind + '</span>' +
+        '<li class="spc-row" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '" data-index="' + index + '">' +
+          '<span class="spc-kind ' + kindClass + '">' + kindLabel + '</span>' +
           '<span class="spc-name">' + escapeHtml(item.name) + '</span>' +
-        '</div>';
+          '<span class="spc-meta">' + meta + '</span>' +
+        '</li>';
     }).join('');
 
     renderStatusBar();
@@ -172,7 +190,7 @@
     if (!pathEl) {
       return;
     }
-    pathEl.textContent = 'PATH: ' + State.path;
+    pathEl.textContent = State.path;
   }
 
   function renderStatusBar() {
@@ -183,10 +201,15 @@
 
     const total = State.items.length;
     const visible = getFilteredItems().length;
-    const filterPart = State.filter ? ' · ' + visible + '/' + total + ' match' + (visible === 1 ? '' : 'es') + ' for "' + State.filter + '"' : ' · ' + total + ' item' + (total === 1 ? '' : 's');
-    const messagePart = State.statusMessage ? ' · ' + State.statusMessage : '';
+    const summary = State.filter
+      ? visible + '/' + total + ' match' + (visible === 1 ? '' : 'es') + ' for "' + State.filter + '"'
+      : total + ' item' + (total === 1 ? '' : 's');
+    const main = State.statusMessage ? summary + ' · ' + State.statusMessage : summary;
+    const meta = 'v' + Config.version + ' · ↑/↓ move · Enter open · ? help';
 
-    statusEl.textContent = 'v' + Config.version + filterPart + messagePart;
+    statusEl.innerHTML = '' +
+      '<span class="spc-status-main">' + escapeHtml(main) + '</span>' +
+      '<span class="spc-status-meta">' + escapeHtml(meta) + '</span>';
   }
 
   function renderHelpPanel() {
@@ -198,13 +221,14 @@
   }
 
   function renderFilter() {
+    const filterBarEl = document.getElementById(Config.filterBarId);
     const inputEl = document.getElementById(Config.filterId);
-    if (!inputEl) {
+    if (!filterBarEl || !inputEl) {
       return;
     }
 
+    filterBarEl.hidden = !State.filterActive;
     inputEl.value = State.filter;
-    inputEl.hidden = !State.filterActive;
   }
 
   function renderOverlay() {
@@ -214,107 +238,341 @@
       overlayEl = document.createElement('div');
       overlayEl.id = Config.overlayId;
       overlayEl.tabIndex = -1;
-      overlayEl.innerHTML = '' +
-        '<style>' +
-          '#' + Config.overlayId + ' {' +
-            '--spc-bg: #1a1a1a;' +
-            '--spc-fg: #d4d4d4;' +
-            '--spc-accent: #569cd6;' +
-            '--spc-selected: #264f78;' +
-            'position: fixed;' +
-            'inset: 24px;' +
-            'z-index: ' + Config.zIndex + ';' +
-            'display: flex;' +
-            'flex-direction: column;' +
-            'gap: 12px;' +
-            'padding: 16px;' +
-            'background: var(--spc-bg);' +
-            'color: var(--spc-fg);' +
-            'border: 1px solid var(--spc-accent);' +
-            'border-radius: 8px;' +
-            'box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45);' +
-            'font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;' +
-          '}' +
-          '#' + Config.overlayId + ' * { box-sizing: border-box; }' +
-          '#' + Config.overlayId + ':focus { outline: 2px solid var(--spc-accent); outline-offset: 2px; }' +
-          '#' + Config.overlayId + ' .spc-header {' +
-            'display: flex;' +
-            'justify-content: space-between;' +
-            'align-items: center;' +
-            'gap: 12px;' +
-            'padding-bottom: 8px;' +
-            'border-bottom: 1px solid rgba(255,255,255,0.12);' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-filter {' +
-            'width: 100%;' +
-            'padding: 8px 10px;' +
-            'background: #111;' +
-            'color: var(--spc-fg);' +
-            'border: 1px solid rgba(255,255,255,0.18);' +
-            'border-radius: 4px;' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-list {' +
-            'flex: 1;' +
-            'overflow: auto;' +
-            'padding: 8px 0;' +
-            'border: 1px solid rgba(255,255,255,0.08);' +
-            'border-radius: 4px;' +
-            'background: rgba(255,255,255,0.02);' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-row {' +
-            'display: grid;' +
-            'grid-template-columns: 18px 40px minmax(0, 1fr);' +
-            'gap: 8px;' +
-            'padding: 4px 10px;' +
-            'white-space: nowrap;' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-row.is-selected {' +
-            'background: var(--spc-selected);' +
-            'color: #fff;' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-row.spc-empty {' +
-            'display: block;' +
-            'padding: 8px 10px;' +
-            'opacity: 0.75;' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-help {' +
-            'padding: 10px;' +
-            'border: 1px solid rgba(255,255,255,0.12);' +
-            'border-radius: 4px;' +
-            'background: rgba(255,255,255,0.03);' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-help-grid {' +
-            'display: grid;' +
-            'grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));' +
-            'gap: 6px 16px;' +
-          '}' +
-          '#' + Config.overlayId + ' .spc-status {' +
-            'padding-top: 8px;' +
-            'border-top: 1px solid rgba(255,255,255,0.12);' +
-            'color: var(--spc-accent);' +
-          '}' +
-        '</style>' +
-        '<div class="spc-header">' +
-          '<div><strong>' + Config.title + '</strong></div>' +
-          '<div id="' + Config.pathId + '"></div>' +
-        '</div>' +
-        '<input id="' + Config.filterId + '" class="spc-filter" type="text" spellcheck="false" autocomplete="off" placeholder="Filter items..." hidden />' +
-        '<div id="' + Config.listId + '" class="spc-list"></div>' +
-        '<div id="' + Config.helpId + '" class="spc-help" hidden>' +
-          '<div class="spc-help-grid">' +
-            '<div>↑ / ↓ — Move selection</div>' +
-            '<div>Enter — Open folder / file</div>' +
-            '<div>Backspace — Go to parent</div>' +
-            '<div>ESC — Close filter / overlay</div>' +
-            '<div>/ — Filter current list</div>' +
-            '<div>g — Jump to path</div>' +
-            '<div>o — Open selected item</div>' +
-            '<div>Ctrl+L — Copy selected URL</div>' +
-            '<div>r — Refresh mock data</div>' +
-            '<div>? — Toggle help</div>' +
-          '</div>' +
-        '</div>' +
-        '<div id="' + Config.statusId + '" class="spc-status"></div>';
+      overlayEl.setAttribute('role', 'dialog');
+      overlayEl.setAttribute('aria-modal', 'true');
+      overlayEl.setAttribute('aria-labelledby', Config.pathId);
+      overlayEl.setAttribute('aria-describedby', Config.statusId);
+      overlayEl.innerHTML = `
+        <style>
+          #spc-overlay,
+          #spc-overlay * {
+            box-sizing: border-box;
+          }
+
+          #spc-overlay {
+            --spc-z: ${Config.zIndex};
+            --spc-overlay-inset: 2rem;
+            --spc-radius: 0.65rem;
+            --spc-gap: 0.75rem;
+            --spc-pad-x: 1rem;
+            --spc-pad-y: 0.75rem;
+            --spc-row-pad-x: 1rem;
+            --spc-row-pad-y: 0.5rem;
+            --spc-font-size: 1rem;
+            --spc-line-height: 1.4;
+            --spc-bg: #1a1a1a;
+            --spc-panel: #202225;
+            --spc-panel-strong: #16181b;
+            --spc-panel-muted: #24282d;
+            --spc-border: #343a40;
+            --spc-text: #eceff4;
+            --spc-text-dim: #9aa4b2;
+            --spc-text-muted: #6f7a88;
+            --spc-path: #8fbcff;
+            --spc-folder: #7bd88f;
+            --spc-file: #ffd479;
+            --spc-accent: #5fb3ff;
+            --spc-accent-strong: #7cc4ff;
+            --spc-selected-bg: #26374a;
+            --spc-selected-border: #5fb3ff;
+            --spc-selected-text: #f8fbff;
+            --spc-status-bg: #141619;
+            --spc-status-text: #d8dee9;
+            --spc-help-backdrop: rgba(5, 7, 10, 0.72);
+            position: fixed;
+            inset: var(--spc-overlay-inset);
+            z-index: var(--spc-z);
+            display: grid;
+            grid-template-rows: auto auto minmax(0, 1fr) auto;
+            gap: var(--spc-gap);
+            padding: 1rem;
+            background: linear-gradient(180deg, rgba(31, 33, 37, 0.98) 0%, rgba(19, 21, 24, 0.98) 100%);
+            border: 0.08rem solid var(--spc-border);
+            border-radius: var(--spc-radius);
+            box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.45);
+            color: var(--spc-text);
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            font-size: var(--spc-font-size);
+            line-height: var(--spc-line-height);
+            outline: none;
+            overflow: hidden;
+          }
+
+          #spc-overlay[hidden],
+          #spc-overlay [hidden] {
+            display: none !important;
+          }
+
+          #spc-pathbar,
+          #spc-statusbar,
+          #spc-filterbar,
+          #spc-help {
+            border: 0.08rem solid var(--spc-border);
+            border-radius: 0.45rem;
+          }
+
+          #spc-pathbar {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 0.75em;
+            min-height: 2.75rem;
+            padding: var(--spc-pad-y) var(--spc-pad-x);
+            background: var(--spc-panel-strong);
+            color: var(--spc-text);
+            white-space: nowrap;
+          }
+
+          #spc-pathbar .spc-label {
+            flex: 0 0 auto;
+            color: var(--spc-text-dim);
+            letter-spacing: 0.08em;
+          }
+
+          #spc-current-path {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--spc-path);
+          }
+
+          #spc-filterbar {
+            position: sticky;
+            top: 3.6rem;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 0.75em;
+            min-height: 2.75rem;
+            padding: 0.55rem var(--spc-pad-x);
+            background: var(--spc-panel);
+          }
+
+          #spc-filterbar .spc-label {
+            flex: 0 0 auto;
+            color: var(--spc-accent-strong);
+          }
+
+          #spc-filter-input {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: var(--spc-text);
+            font: inherit;
+            outline: none;
+          }
+
+          #spc-filter-input::placeholder {
+            color: var(--spc-text-muted);
+            opacity: 1;
+          }
+
+          #spc-list {
+            position: relative;
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: auto;
+            border: 0.08rem solid var(--spc-border);
+            border-radius: 0.45rem;
+            background: var(--spc-bg);
+          }
+
+          #spc-list:focus {
+            outline: none;
+          }
+
+          #spc-list .spc-empty,
+          #spc-list .spc-error,
+          #spc-list .spc-loading {
+            padding: 1rem;
+            color: var(--spc-text-dim);
+          }
+
+          #spc-list .spc-error {
+            color: #ff8f8f;
+          }
+
+          .spc-row {
+            display: grid;
+            grid-template-columns: 1.5em auto minmax(0, 1fr);
+            align-items: baseline;
+            gap: 0.75em;
+            min-height: 2.25rem;
+            padding: var(--spc-row-pad-y) var(--spc-row-pad-x);
+            border-bottom: 0.08rem solid rgba(255, 255, 255, 0.04);
+            color: var(--spc-text);
+          }
+
+          .spc-row:last-child {
+            border-bottom: 0;
+          }
+
+          .spc-row::before {
+            content: ' ';
+            color: var(--spc-accent-strong);
+            font-weight: 700;
+          }
+
+          .spc-row[aria-selected='true'] {
+            background: var(--spc-selected-bg);
+            color: var(--spc-selected-text);
+            box-shadow: inset 0.18rem 0 0 var(--spc-selected-border);
+          }
+
+          .spc-row[aria-selected='true']::before {
+            content: '>';
+          }
+
+          .spc-kind {
+            font-weight: 700;
+            letter-spacing: 0.03em;
+          }
+
+          .spc-kind--folder {
+            color: var(--spc-folder);
+          }
+
+          .spc-kind--file {
+            color: var(--spc-file);
+          }
+
+          .spc-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          .spc-meta {
+            justify-self: end;
+            color: var(--spc-text-muted);
+          }
+
+          #spc-statusbar {
+            position: sticky;
+            bottom: 0;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1em;
+            min-height: 2.5rem;
+            padding: 0.55rem var(--spc-pad-x);
+            background: var(--spc-status-bg);
+            color: var(--spc-status-text);
+          }
+
+          #spc-statusbar .spc-status-main {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          #spc-statusbar .spc-status-meta {
+            flex: 0 0 auto;
+            color: var(--spc-text-dim);
+          }
+
+          #spc-help {
+            position: absolute;
+            inset: 50% auto auto 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            width: min(44rem, calc(100% - 4rem));
+            max-height: calc(100% - 6rem);
+            overflow: auto;
+            padding: 1.25rem;
+            background: var(--spc-panel);
+            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+          }
+
+          #spc-help::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: var(--spc-help-backdrop);
+          }
+
+          #spc-help h2 {
+            margin: 0 0 0.75rem;
+            font-size: 1rem;
+            color: var(--spc-accent-strong);
+          }
+
+          #spc-help p {
+            margin: 0 0 0.75rem;
+            color: var(--spc-text-dim);
+          }
+
+          #spc-help dl {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            gap: 0.5rem 1rem;
+            margin: 0;
+          }
+
+          #spc-help dt {
+            color: var(--spc-file);
+            font-weight: 700;
+          }
+
+          #spc-help dd {
+            margin: 0;
+            color: var(--spc-text);
+          }
+
+          @media (max-width: 48rem) {
+            #spc-overlay {
+              --spc-overlay-inset: 1rem;
+              padding: 0.75rem;
+            }
+
+            .spc-row {
+              grid-template-columns: 1.25em auto minmax(0, 1fr);
+              gap: 0.5em;
+            }
+
+            #spc-statusbar {
+              flex-direction: column;
+              align-items: flex-start;
+            }
+          }
+        </style>
+        <div id="${Config.pathBarId}">
+          <span class="spc-label">PATH</span>
+          <span id="${Config.pathId}"></span>
+        </div>
+        <div id="${Config.filterBarId}" hidden>
+          <span class="spc-label">FILTER</span>
+          <input id="${Config.filterId}" type="text" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type to filter current folder" aria-label="Filter current folder" />
+        </div>
+        <ul id="${Config.listId}" role="listbox" aria-label="SharePoint items"></ul>
+        <div id="${Config.statusId}" role="status" aria-live="polite"></div>
+        <section id="${Config.helpId}" aria-label="Keyboard help" hidden>
+          <h2>Keyboard Help</h2>
+          <p>Keyboard is the interface. Mouse is optional and unsupported.</p>
+          <dl>
+            <dt>↑ / ↓</dt><dd>Move selection</dd>
+            <dt>Enter</dt><dd>Open folder or file</dd>
+            <dt>Backspace</dt><dd>Go to parent folder</dd>
+            <dt>/</dt><dd>Open filter</dd>
+            <dt>g</dt><dd>Jump to path</dd>
+            <dt>o</dt><dd>Open selected file in new tab</dd>
+            <dt>Ctrl+L</dt><dd>Copy selected link</dd>
+            <dt>r</dt><dd>Refresh current folder</dd>
+            <dt>?</dt><dd>Toggle help</dd>
+            <dt>Esc</dt><dd>Close help, filter, or overlay</dd>
+          </dl>
+        </section>`;
 
       overlayEl.addEventListener('keydown', onOverlayKeydown);
       overlayEl.addEventListener('focusout', onOverlayFocusOut);
@@ -329,7 +587,7 @@
     renderFilter();
     renderHelpPanel();
     renderList();
-    overlayEl.focus();
+    focusActiveTarget();
   }
 
   function renderAll() {
@@ -351,7 +609,10 @@
     const inputEl = document.getElementById(Config.filterId);
     if (inputEl) {
       inputEl.value = '';
-      inputEl.hidden = true;
+    }
+    const filterBarEl = document.getElementById(Config.filterBarId);
+    if (filterBarEl) {
+      filterBarEl.hidden = true;
     }
   }
 
@@ -481,7 +742,7 @@
 
   function jumpToPath() {
     const nextPath = window.prompt('Jump to path', State.path);
-    if (nextPath === null) {
+    if (nextPath === null || nextPath.trim() === '') {
       return;
     }
 
@@ -508,17 +769,17 @@
 
   function onOverlayFocusOut(event) {
     const overlayEl = getOverlay();
-    if (!overlayEl || State.filterActive) {
+    if (!overlayEl) {
       return;
     }
     if (event.relatedTarget && overlayEl.contains(event.relatedTarget)) {
       return;
     }
     window.setTimeout(function() {
-      const activeOverlay = getOverlay();
-      if (activeOverlay && !State.filterActive) {
-        activeOverlay.focus();
+      if (!getOverlay()) {
+        return;
       }
+      focusActiveTarget();
     }, 0);
   }
 
@@ -570,10 +831,12 @@
           clearFilter();
           setStatus('Filter cleared');
           renderAll();
-          const overlayEl = getOverlay();
-          if (overlayEl) {
-            overlayEl.focus();
-          }
+          focusActiveTarget();
+        } else if (State.helpVisible) {
+          State.helpVisible = false;
+          renderHelpPanel();
+          setStatus('Help closed');
+          focusActiveTarget();
         } else {
           closeOverlay();
         }
@@ -590,10 +853,16 @@
         jumpToPath();
         break;
       case 'o':
-      case 'O':
+      case 'O': {
         event.preventDefault();
-        openItem(getSelectedItem());
+        const item = getSelectedItem();
+        if (item && item.type === 'folder') {
+          navigateToSelected();
+        } else {
+          openItem(item);
+        }
         break;
+      }
       case 'r':
       case 'R':
         event.preventDefault();
