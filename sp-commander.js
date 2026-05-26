@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.9',
+    version: '0.3.10',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -80,7 +80,7 @@
         .join('/');
       const base = Api.siteUrl + '/_api/web/GetFolderByServerRelativeUrl(\'' + escapedPath + '\')';
 
-      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount,TimeLastModified,ListItemAllFields/Editor/Title&$expand=ListItemAllFields/Editor';
+      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount,TimeLastModified';
       const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified,ModifiedBy/Title&$expand=ModifiedBy';
 
       return Promise.all([Api._fetch(foldersUrl), Api._fetch(filesUrl)]).then(function(results) {
@@ -88,10 +88,6 @@
           .filter(function(f) { return f.Name !== 'Forms'; })
           .sort(function(a, b) { return a.Name.localeCompare(b.Name, undefined, { sensitivity: 'base' }); })
           .map(function(f) {
-            var editorTitle = null;
-            if (f.ListItemAllFields && f.ListItemAllFields.Editor && f.ListItemAllFields.Editor.Title) {
-              editorTitle = f.ListItemAllFields.Editor.Title;
-            }
             return {
               name: f.Name,
               type: 'folder',
@@ -99,7 +95,6 @@
               size: null,
               itemCount: f.ItemCount != null ? Number(f.ItemCount) : null,
               modified: f.TimeLastModified || null,
-              modifiedBy: editorTitle,
             };
           });
 
