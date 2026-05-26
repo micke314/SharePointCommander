@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.4',
+    version: '0.3.5',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -183,6 +183,14 @@
     return name.length > 22 ? name.slice(0, 21) + '…' : name;
   }
 
+  function formatSize(bytes) {
+    if (bytes == null) return '';
+    if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(2).replace(/\.?0+$/, '') + 'G';
+    if (bytes >= 1048576)    return (bytes / 1048576).toFixed(2).replace(/\.?0+$/, '') + 'M';
+    if (bytes >= 1024)       return (bytes / 1024).toFixed(2).replace(/\.?0+$/, '') + 'K';
+    return bytes + 'B';
+  }
+
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, function(char) {
       return {
@@ -279,9 +287,11 @@
       const kindClass = item.type === 'folder' ? 'spc-kind--folder'
                       : item.type === 'parent' ? 'spc-kind--parent'
                       : 'spc-kind--file';
-      const countCell = (item.type === 'folder' && item.itemCount != null)
+      const countCell = item.type === 'folder' && item.itemCount != null
         ? escapeHtml(String(item.itemCount))
-        : '';
+        : item.type === 'file' && item.size != null
+          ? escapeHtml(formatSize(item.size))
+          : '';
       const dateCell  = (item.type !== 'parent' && item.modified)
         ? escapeHtml(formatDate(item.modified))
         : '';
@@ -748,7 +758,7 @@
         <div id="spc-colheader" aria-hidden="true">
           <span></span>
           <span class="spc-ch-name">Name</span>
-          <span class="spc-ch-count">#</span>
+          <span class="spc-ch-count"># / Size</span>
           <span class="spc-ch-date">Modified</span>
           <span class="spc-ch-by">By</span>
         </div>
