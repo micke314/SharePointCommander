@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.3',
+    version: '0.3.4',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -883,7 +883,10 @@
       setStatus('No item selected');
       return;
     }
-    window.open(item.url, '_blank', 'noopener');
+    // Append ?web=1 for files so SharePoint opens them in the browser (Office Online)
+    // rather than triggering a download. Folders are never passed here.
+    const openUrl = window.location.origin + item.url + '?web=1';
+    window.open(openUrl, '_blank', 'noopener');
     setStatus('Opened ' + item.name);
   }
 
