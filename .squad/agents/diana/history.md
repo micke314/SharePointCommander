@@ -4,6 +4,8 @@
 - 2026-05-26T13:53:12.170+02:00 — Focus ownership is a first-class acceptance area on SharePoint pages: Tab trapping, outside-click recovery, and manual focus-steal simulation all need explicit checklist coverage.
 - 2026-05-26T13:53:12.170+02:00 — Edge cases define done for the overlay MVP: empty lists, single-item lists, duplicate launches, long names, and rapid keypresses must be tested before Iteration 1 can pass.
 - 2026-05-26T13:53:12.170+02:00 — Mode-specific `Escape` behavior is critical: filter closes first, help closes first, and only normal mode may dismiss the overlay, without leaking the keypress to SharePoint.
+- 2026-05-26T14:09:31.683+02:00 — Re-verification should judge focus recovery by effective focus target, not only by inline condition shape: delegating to a shared helper is acceptable if filter mode is preserved and overlay refocus is limited to non-filter mode.
+- 2026-05-26T14:09:31.683+02:00 — CSS compatibility audits need a selector-to-markup check on both IDs and utility classes; matching structure (`spc-pathbar`, `spc-filterbar`, `spc-row`, status/help selectors) is enough to clear dead-CSS concerns.
 
 ## Project Context (Day 1)
 

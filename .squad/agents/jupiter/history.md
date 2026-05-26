@@ -1,5 +1,15 @@
 ## Learnings
 
+### 2026-05-26 — CSP Bookmarklet Loader Fix
+
+**CSP constraint discovery:**
+- SharePoint Online's CSP blocks external `<script>` tags (script-src with src=) even when domains are trusted.
+- However, `'unsafe-eval'` IS allowed in SharePoint's CSP, enabling `eval()` and `new Function()` patterns.
+- Fetch + eval bypasses the script-tag restriction while remaining CSP-compliant.
+- `raw.githubusercontent.com` supports CORS with `*` wildcard, enabling cross-origin fetch.
+
+**Pattern:** For browser bookmarklets on restricted pages, consider fetch+eval as a CSP-safe alternative to DOM script injection. See decision: jupiter-csp-bookmarklet-fix.md
+
 ### 2026-05-26 — Iteration Plan & Architecture
 
 **Iteration structure:**

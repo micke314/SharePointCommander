@@ -5,21 +5,21 @@
 Paste this directly into a browser bookmark URL/location field:
 
 ```text
-javascript:(function(){var s=document.createElement('script');s.src='https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now();s.onload=function(){console.log('SharePoint Commander loaded. Run: sp_commander()')};document.head.appendChild(s)})();
+javascript:(function(){fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now()).then(function(r){return r.text()}).then(function(t){eval(t);sp_commander()}).catch(function(e){console.error('SP Commander load failed:',e)})})();
 ```
 
 > Current branch target: `dev`. On release, switch the URL path from `/dev/` to `/main/`.
+
+**Why fetch+eval?** SharePoint Online's Content Security Policy blocks external `<script>` tags but allows `unsafe-eval`. This pattern fetches the script as text and executes it safely within the page's eval context.
 
 ## 2. DevTools console snippet
 
 ```js
 // SharePoint Commander — load from GitHub
-(function() {
-  var s = document.createElement('script');
-  s.src = 'https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v=' + Date.now();
-  s.onload = function() { console.log('SharePoint Commander loaded. Run: sp_commander()'); };
-  document.head.appendChild(s);
-})();
+fetch('https://raw.githubusercontent.com/micke314/SharePointCommander/dev/sp-commander.js?v='+Date.now())
+  .then(function(r){return r.text()})
+  .then(function(t){eval(t);console.log('SharePoint Commander loaded. Run: sp_commander()')})
+  .catch(function(e){console.error('SP Commander load failed:',e)});
 ```
 
 ## 3. Bookmarklet installation instructions

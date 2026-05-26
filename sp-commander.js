@@ -171,14 +171,10 @@
 
     listEl.innerHTML = items.map(function(item, index) {
       const isSelected = index === State.selectedIndex;
-      const kindLabel = item.type === 'folder' ? '[D]' : '[F]';
       const kindClass = item.type === 'folder' ? 'spc-kind--folder' : 'spc-kind--file';
-      const meta = item.type === 'folder' ? 'Folder' : 'File';
       return '' +
-        '<li class="spc-row" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '" data-index="' + index + '">' +
-          '<span class="spc-kind ' + kindClass + '">' + kindLabel + '</span>' +
+        '<li class="spc-row ' + kindClass + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '" data-index="' + index + '">' +
           '<span class="spc-name">' + escapeHtml(item.name) + '</span>' +
-          '<span class="spc-meta">' + meta + '</span>' +
         '</li>';
     }).join('');
 
@@ -448,6 +444,14 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+          }
+
+          .spc-kind--folder .spc-name {
+            color: var(--spc-folder);
+          }
+
+          .spc-kind--file .spc-name {
+            color: var(--spc-file);
           }
 
           .spc-meta {
