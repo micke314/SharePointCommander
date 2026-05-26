@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.2.6',
+    version: '0.2.7',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -180,7 +180,7 @@
 
   function formatModifiedBy(name) {
     if (!name) return '';
-    return name.length > 14 ? name.slice(0, 13) + '…' : name;
+    return name.length > 22 ? name.slice(0, 21) + '…' : name;
   }
 
   function escapeHtml(value) {
@@ -465,7 +465,7 @@
           #spc-colheader {
             grid-row: 3;
             display: grid;
-            grid-template-columns: 1.2em minmax(0, 1fr) 10em 10em calc(11em + 100px);
+            grid-template-columns: 1.2em minmax(0, 1fr) calc(10em + 50px) 10em calc(11em + 200px);
             gap: 0.5em;
             padding: 0.15rem 0.5rem;
             background: #000055;
@@ -530,7 +530,7 @@
 
           .spc-row {
             display: grid;
-            grid-template-columns: 1.2em minmax(0, 1fr) 10em 10em calc(11em + 100px);
+            grid-template-columns: 1.2em minmax(0, 1fr) calc(10em + 50px) 10em calc(11em + 200px);
             align-items: center;
             gap: 0.5em;
             min-height: 1.4rem;
