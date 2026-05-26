@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.2.9',
+    version: '0.3.0',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -332,7 +332,7 @@
       ? visible + '/' + total + ' match' + (visible === 1 ? '' : 'es') + ' for "' + State.filter + '"'
       : total + ' item' + (total === 1 ? '' : 's');
     const main = State.statusMessage ? summary + ' · ' + State.statusMessage : summary;
-    const meta = 'v' + Config.version + ' · ↑/↓ move · Enter open · ? help';
+    const meta = 'v' + Config.version + ' · ↑/↓ move · Home/End · PgUp/PgDn · Enter open · ? help';
 
     statusEl.innerHTML = '' +
       '<span class="spc-status-main">' + escapeHtml(main) + '</span>' +
@@ -845,7 +845,17 @@
       return;
     }
 
-    State.selectedIndex = (State.selectedIndex + step + items.length) % items.length;
+    if (step === -Infinity) {
+      State.selectedIndex = 0;
+    } else if (step === Infinity) {
+      State.selectedIndex = items.length - 1;
+    } else if (Math.abs(step) === 1) {
+      // ArrowUp/Down: wrap around
+      State.selectedIndex = (State.selectedIndex + step + items.length) % items.length;
+    } else {
+      // PageUp/PageDown: clamp at boundaries
+      State.selectedIndex = Math.max(0, Math.min(items.length - 1, State.selectedIndex + step));
+    }
     renderList();
     const selectedEl = document.querySelector('#spc-list .spc-selected');
     if (selectedEl) {
@@ -1044,6 +1054,22 @@
       case 'ArrowDown':
         event.preventDefault();
         moveSelection(1);
+        break;
+      case 'Home':
+        event.preventDefault();
+        moveSelection(-Infinity);
+        break;
+      case 'End':
+        event.preventDefault();
+        moveSelection(Infinity);
+        break;
+      case 'PageUp':
+        event.preventDefault();
+        moveSelection(-10);
+        break;
+      case 'PageDown':
+        event.preventDefault();
+        moveSelection(10);
         break;
       case 'Enter':
         event.preventDefault();
