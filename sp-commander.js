@@ -192,6 +192,8 @@
     }
   }
 
+  var PARENT_ITEM = { type: 'parent', name: '..', url: null };
+
   function getFilteredItems() {
     if (!State.filter) {
       return State.items.slice();
@@ -201,6 +203,18 @@
     return State.items.filter(function(item) {
       return item.name.toLowerCase().indexOf(needle) !== -1;
     });
+  }
+
+  function getDisplayItems() {
+    const items = getFilteredItems();
+    if (State.filter) {
+      return items;
+    }
+    const parentPath = Api.getParentPath(State.path);
+    if (parentPath !== State.path) {
+      return [PARENT_ITEM].concat(items);
+    }
+    return items;
   }
 
   function clampSelection(items) {
@@ -218,7 +232,7 @@
   }
 
   function getSelectedItem() {
-    const items = getFilteredItems();
+    const items = getDisplayItems();
     clampSelection(items);
     return items[State.selectedIndex] || null;
   }
@@ -229,7 +243,7 @@
       return;
     }
 
-    const items = getFilteredItems();
+    const items = getDisplayItems();
     clampSelection(items);
 
     if (!items.length) {
@@ -240,12 +254,26 @@
 
     listEl.innerHTML = items.map(function(item, index) {
       const isSelected = index === State.selectedIndex;
-      const kindClass = item.type === 'folder' ? 'spc-kind--folder' : 'spc-kind--file';
+      const kindClass = item.type === 'folder' ? 'spc-kind--folder'
+                      : item.type === 'parent' ? 'spc-kind--parent'
+                      : 'spc-kind--file';
       return '' +
         '<li class="spc-row ' + kindClass + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '" data-index="' + index + '">' +
           '<span class="spc-name">' + escapeHtml(item.name) + '</span>' +
         '</li>';
     }).join('');
+
+    listEl.querySelectorAll('.spc-row').forEach(function(row) {
+      row.addEventListener('click', function() {
+        State.selectedIndex = parseInt(row.dataset.index, 10);
+        renderList();
+        focusActiveTarget();
+      });
+      row.addEventListener('dblclick', function() {
+        State.selectedIndex = parseInt(row.dataset.index, 10);
+        navigateToSelected();
+      });
+    });
 
     renderStatusBar();
   }
@@ -437,10 +465,20 @@
             padding: 0.1rem 0.5rem;
             border-bottom: 1px solid rgba(85, 255, 255, 0.1);
             color: #FFFFFF;
+            cursor: pointer;
+            user-select: none;
+          }
+
+          .spc-row:hover:not([aria-selected='true']) {
+            background: rgba(85, 255, 255, 0.12);
           }
 
           .spc-row:last-child {
             border-bottom: 0;
+          }
+
+          .spc-kind--parent .spc-name {
+            color: #AAAAAA;
           }
 
           .spc-row::before {
@@ -787,6 +825,11 @@
     const item = getSelectedItem();
     if (!item) {
       setStatus('No item selected');
+      return;
+    }
+
+    if (item.type === 'parent') {
+      goToParent();
       return;
     }
 
