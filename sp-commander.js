@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.8',
+    version: '0.3.9',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -74,15 +74,19 @@
     },
 
     listFolderContents: function(path) {
-      const escapedPath = path.replace(/'/g, "''");
+      const escapedPath = path.replace(/'/g, "''")
+        .split('/')
+        .map(function(seg) { return seg ? encodeURIComponent(seg) : seg; })
+        .join('/');
       const base = Api.siteUrl + '/_api/web/GetFolderByServerRelativeUrl(\'' + escapedPath + '\')';
 
-      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount,TimeLastModified,ListItemAllFields/Editor/Title&$expand=ListItemAllFields/Editor&$orderby=Name';
-      const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified,ModifiedBy/Title&$expand=ModifiedBy&$orderby=Name';
+      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount,TimeLastModified,ListItemAllFields/Editor/Title&$expand=ListItemAllFields/Editor';
+      const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified,ModifiedBy/Title&$expand=ModifiedBy';
 
       return Promise.all([Api._fetch(foldersUrl), Api._fetch(filesUrl)]).then(function(results) {
         const folders = (results[0].value || [])
           .filter(function(f) { return f.Name !== 'Forms'; })
+          .sort(function(a, b) { return a.Name.localeCompare(b.Name, undefined, { sensitivity: 'base' }); })
           .map(function(f) {
             var editorTitle = null;
             if (f.ListItemAllFields && f.ListItemAllFields.Editor && f.ListItemAllFields.Editor.Title) {
@@ -109,7 +113,7 @@
             modified: f.TimeLastModified || null,
             modifiedBy: (f.ModifiedBy && f.ModifiedBy.Title) ? f.ModifiedBy.Title : null,
           };
-        });
+        }).sort(function(a, b) { return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }); });
 
         return folders.concat(files);
       });
