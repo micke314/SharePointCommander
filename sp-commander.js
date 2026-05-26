@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.2',
+    version: '0.3.3',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -862,7 +862,7 @@
 
   function scrollSelectedIntoView() {
     const list = document.getElementById('spc-list');
-    const selected = list && list.querySelector('.spc-selected');
+    const selected = list && list.querySelector('[aria-selected="true"]');
     if (!list || !selected) return;
 
     const listRect = list.getBoundingClientRect();
