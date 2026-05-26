@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.2.8',
+    version: '0.2.9',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -847,6 +847,10 @@
 
     State.selectedIndex = (State.selectedIndex + step + items.length) % items.length;
     renderList();
+    const selectedEl = document.querySelector('#spc-list .spc-selected');
+    if (selectedEl) {
+      selectedEl.scrollIntoView({ block: 'nearest' });
+    }
   }
 
   function openItem(item) {
