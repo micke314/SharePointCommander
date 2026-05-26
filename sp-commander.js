@@ -342,9 +342,6 @@
           }
 
           #spc-pathbar {
-            position: sticky;
-            top: 0;
-            z-index: 2;
             display: flex;
             align-items: center;
             gap: 0.75em;
@@ -371,9 +368,6 @@
           }
 
           #spc-filterbar {
-            position: sticky;
-            top: 1.8rem;
-            z-index: 2;
             display: flex;
             align-items: center;
             gap: 0.75em;
@@ -492,9 +486,6 @@
           }
 
           #spc-statusbar {
-            position: sticky;
-            bottom: 0;
-            z-index: 2;
             display: flex;
             align-items: center;
             justify-content: space-between;
