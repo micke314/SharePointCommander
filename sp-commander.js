@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.5',
+    version: '0.3.6',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -860,8 +860,8 @@
     } else if (step === Infinity) {
       State.selectedIndex = items.length - 1;
     } else if (Math.abs(step) === 1) {
-      // ArrowUp/Down: wrap around
-      State.selectedIndex = (State.selectedIndex + step + items.length) % items.length;
+      // ArrowUp/Down: clamp at boundaries (no wrap)
+      State.selectedIndex = Math.max(0, Math.min(items.length - 1, State.selectedIndex + step));
     } else {
       // PageUp/PageDown: clamp at boundaries
       State.selectedIndex = Math.max(0, Math.min(items.length - 1, State.selectedIndex + step));
