@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.2.5',
+    version: '0.2.6',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -465,7 +465,7 @@
           #spc-colheader {
             grid-row: 3;
             display: grid;
-            grid-template-columns: 1.2em minmax(0, 1fr) 5em 10em 11em;
+            grid-template-columns: 1.2em minmax(0, 1fr) 10em 10em calc(11em + 100px);
             gap: 0.5em;
             padding: 0.15rem 0.5rem;
             background: #000055;
@@ -530,7 +530,7 @@
 
           .spc-row {
             display: grid;
-            grid-template-columns: 1.2em minmax(0, 1fr) 5em 10em 11em;
+            grid-template-columns: 1.2em minmax(0, 1fr) 10em 10em calc(11em + 100px);
             align-items: center;
             gap: 0.5em;
             min-height: 1.4rem;
