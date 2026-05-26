@@ -23,3 +23,8 @@
 **Inspired by:** Norton Commander, Altap Salamander, terminal file navigators
 
 **Team:** Jupiter (Lead), Minerva (UI/UX), Vulcan (Frontend), Mercury (API), Janus (Performance), Diana (QA), Mars (Security), Fides (Docs), Scribe, Ralph
+- 2026-05-26T14:29:31.616+02:00 — NC redesign: replaced all CSS variables with flat NC palette (#0000AA bg, #55FFFF cyan borders, #000055 header/filter, #000000 status). Eliminated gradients, border-radius, and box-shadow blur — NC is sharp and flat.
+- 2026-05-26T14:29:31.616+02:00 — Added #spc-fnbar as a 5th grid row (auto) below the status bar; static HTML injected in renderOverlay() template, keyed via Config.fnBarId.
+- 2026-05-26T14:29:31.616+02:00 — Selected row now uses solid #55FFFF bg / #000000 text (NC highlight bar) instead of the previous left-border inset approach.
+- 2026-05-26T14:29:31.616+02:00 — renderPathBar() now wraps path in NC-style [ ] brackets.
+- 2026-05-26T14:29:31.616+02:00 — Row height tightened to 1.4rem with 0.1rem vertical padding — NC panels are dense and tabular, not spacious.

@@ -12,6 +12,7 @@
     listId: 'spc-list',
     statusId: 'spc-statusbar',
     helpId: 'spc-help',
+    fnBarId: 'spc-fnbar',
     title: 'SharePoint Commander',
     rootPath: '/',
     zIndex: 2147483647,
@@ -186,7 +187,7 @@
     if (!pathEl) {
       return;
     }
-    pathEl.textContent = State.path;
+    pathEl.textContent = '[' + (State.path || '/') + ']';
   }
 
   function renderStatusBar() {
@@ -248,48 +249,21 @@
           #spc-overlay {
             --spc-z: ${Config.zIndex};
             --spc-overlay-inset: 2rem;
-            --spc-radius: 0.65rem;
-            --spc-gap: 0.75rem;
-            --spc-pad-x: 1rem;
-            --spc-pad-y: 0.75rem;
-            --spc-row-pad-x: 1rem;
-            --spc-row-pad-y: 0.5rem;
-            --spc-font-size: 1rem;
-            --spc-line-height: 1.4;
-            --spc-bg: #1a1a1a;
-            --spc-panel: #202225;
-            --spc-panel-strong: #16181b;
-            --spc-panel-muted: #24282d;
-            --spc-border: #343a40;
-            --spc-text: #eceff4;
-            --spc-text-dim: #9aa4b2;
-            --spc-text-muted: #6f7a88;
-            --spc-path: #8fbcff;
-            --spc-folder: #7bd88f;
-            --spc-file: #ffd479;
-            --spc-accent: #5fb3ff;
-            --spc-accent-strong: #7cc4ff;
-            --spc-selected-bg: #26374a;
-            --spc-selected-border: #5fb3ff;
-            --spc-selected-text: #f8fbff;
-            --spc-status-bg: #141619;
-            --spc-status-text: #d8dee9;
-            --spc-help-backdrop: rgba(5, 7, 10, 0.72);
             position: fixed;
             inset: var(--spc-overlay-inset);
             z-index: var(--spc-z);
             display: grid;
-            grid-template-rows: auto auto minmax(0, 1fr) auto;
-            gap: var(--spc-gap);
-            padding: 1rem;
-            background: linear-gradient(180deg, rgba(31, 33, 37, 0.98) 0%, rgba(19, 21, 24, 0.98) 100%);
-            border: 0.08rem solid var(--spc-border);
-            border-radius: var(--spc-radius);
-            box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.45);
-            color: var(--spc-text);
-            font-family: Consolas, Monaco, 'Courier New', monospace;
-            font-size: var(--spc-font-size);
-            line-height: var(--spc-line-height);
+            grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+            gap: 0;
+            padding: 0;
+            background: #0000AA;
+            border: 3px solid #55FFFF;
+            border-radius: 0;
+            box-shadow: 4px 4px 0 #000033;
+            color: #FFFFFF;
+            font-family: "Courier New", Consolas, monospace;
+            font-size: 1rem;
+            line-height: 1.4;
             outline: none;
             overflow: hidden;
           }
@@ -299,14 +273,6 @@
             display: none !important;
           }
 
-          #spc-pathbar,
-          #spc-statusbar,
-          #spc-filterbar,
-          #spc-help {
-            border: 0.08rem solid var(--spc-border);
-            border-radius: 0.45rem;
-          }
-
           #spc-pathbar {
             position: sticky;
             top: 0;
@@ -314,16 +280,18 @@
             display: flex;
             align-items: center;
             gap: 0.75em;
-            min-height: 2.75rem;
-            padding: var(--spc-pad-y) var(--spc-pad-x);
-            background: var(--spc-panel-strong);
-            color: var(--spc-text);
+            min-height: 1.8rem;
+            padding: 0.2rem 0.75rem;
+            background: #000055;
+            border-bottom: 1px solid #55FFFF;
+            border-radius: 0;
+            color: #FFFFFF;
             white-space: nowrap;
           }
 
           #spc-pathbar .spc-label {
             flex: 0 0 auto;
-            color: var(--spc-text-dim);
+            color: #55FFFF;
             letter-spacing: 0.08em;
           }
 
@@ -331,24 +299,26 @@
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: var(--spc-path);
+            color: #FFFFFF;
           }
 
           #spc-filterbar {
             position: sticky;
-            top: 3.6rem;
+            top: 1.8rem;
             z-index: 2;
             display: flex;
             align-items: center;
             gap: 0.75em;
-            min-height: 2.75rem;
-            padding: 0.55rem var(--spc-pad-x);
-            background: var(--spc-panel);
+            min-height: 1.8rem;
+            padding: 0.15rem 0.75rem;
+            background: #000055;
+            border-bottom: 1px solid #55FFFF;
+            border-radius: 0;
           }
 
           #spc-filterbar .spc-label {
             flex: 0 0 auto;
-            color: var(--spc-accent-strong);
+            color: #55FFFF;
           }
 
           #spc-filter-input {
@@ -358,14 +328,14 @@
             padding: 0;
             border: 0;
             background: transparent;
-            color: var(--spc-text);
+            color: #FFFFFF;
             font: inherit;
             outline: none;
           }
 
           #spc-filter-input::placeholder {
-            color: var(--spc-text-muted);
-            opacity: 1;
+            color: #55FFFF;
+            opacity: 0.6;
           }
 
           #spc-list {
@@ -375,9 +345,9 @@
             padding: 0;
             list-style: none;
             overflow: auto;
-            border: 0.08rem solid var(--spc-border);
-            border-radius: 0.45rem;
-            background: var(--spc-bg);
+            border: 0;
+            border-radius: 0;
+            background: #0000AA;
           }
 
           #spc-list:focus {
@@ -387,23 +357,23 @@
           #spc-list .spc-empty,
           #spc-list .spc-error,
           #spc-list .spc-loading {
-            padding: 1rem;
-            color: var(--spc-text-dim);
+            padding: 0.5rem 0.75rem;
+            color: #55FFFF;
           }
 
           #spc-list .spc-error {
-            color: #ff8f8f;
+            color: #FF5555;
           }
 
           .spc-row {
             display: grid;
-            grid-template-columns: 1.5em auto minmax(0, 1fr);
-            align-items: baseline;
-            gap: 0.75em;
-            min-height: 2.25rem;
-            padding: var(--spc-row-pad-y) var(--spc-row-pad-x);
-            border-bottom: 0.08rem solid rgba(255, 255, 255, 0.04);
-            color: var(--spc-text);
+            grid-template-columns: 1.2em minmax(0, 1fr);
+            align-items: center;
+            gap: 0.5em;
+            min-height: 1.4rem;
+            padding: 0.1rem 0.5rem;
+            border-bottom: 1px solid rgba(85, 255, 255, 0.1);
+            color: #FFFFFF;
           }
 
           .spc-row:last-child {
@@ -412,31 +382,33 @@
 
           .spc-row::before {
             content: ' ';
-            color: var(--spc-accent-strong);
-            font-weight: 700;
+            color: #55FFFF;
           }
 
           .spc-row[aria-selected='true'] {
-            background: var(--spc-selected-bg);
-            color: var(--spc-selected-text);
-            box-shadow: inset 0.18rem 0 0 var(--spc-selected-border);
+            background: #55FFFF;
+            color: #000000;
           }
 
           .spc-row[aria-selected='true']::before {
             content: '>';
+            color: #000000;
           }
 
-          .spc-kind {
-            font-weight: 700;
-            letter-spacing: 0.03em;
+          .spc-row[aria-selected='true'] .spc-name {
+            color: #000000;
           }
 
-          .spc-kind--folder {
-            color: var(--spc-folder);
+          .spc-row[aria-selected='true'] .spc-meta {
+            color: #000055;
           }
 
-          .spc-kind--file {
-            color: var(--spc-file);
+          .spc-kind--folder .spc-name {
+            color: #55FFFF;
+          }
+
+          .spc-kind--file .spc-name {
+            color: #FFFFFF;
           }
 
           .spc-name {
@@ -446,17 +418,9 @@
             white-space: nowrap;
           }
 
-          .spc-kind--folder .spc-name {
-            color: var(--spc-folder);
-          }
-
-          .spc-kind--file .spc-name {
-            color: var(--spc-file);
-          }
-
           .spc-meta {
             justify-self: end;
-            color: var(--spc-text-muted);
+            color: #55FFFF;
           }
 
           #spc-statusbar {
@@ -467,10 +431,12 @@
             align-items: center;
             justify-content: space-between;
             gap: 1em;
-            min-height: 2.5rem;
-            padding: 0.55rem var(--spc-pad-x);
-            background: var(--spc-status-bg);
-            color: var(--spc-status-text);
+            min-height: 1.6rem;
+            padding: 0.15rem 0.75rem;
+            background: #000000;
+            border-top: 1px solid #55FFFF;
+            border-radius: 0;
+            color: #55FFFF;
           }
 
           #spc-statusbar .spc-status-main {
@@ -482,7 +448,30 @@
 
           #spc-statusbar .spc-status-meta {
             flex: 0 0 auto;
-            color: var(--spc-text-dim);
+            color: #FFFF55;
+          }
+
+          #spc-fnbar {
+            display: flex;
+            gap: 0;
+            background: #000000;
+            color: #FFFFFF;
+            font-size: 0.85em;
+            padding: 0.1rem 0;
+            border-top: 1px solid #333333;
+          }
+
+          #spc-fnbar span {
+            flex: 1;
+            text-align: center;
+            padding: 0 0.25rem;
+          }
+
+          #spc-fnbar b {
+            background: #55FFFF;
+            color: #000000;
+            padding: 0 0.2rem;
+            font-weight: normal;
           }
 
           #spc-help {
@@ -493,9 +482,11 @@
             width: min(44rem, calc(100% - 4rem));
             max-height: calc(100% - 6rem);
             overflow: auto;
-            padding: 1.25rem;
-            background: var(--spc-panel);
-            box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+            padding: 1rem;
+            background: #0000AA;
+            border: 2px solid #55FFFF;
+            border-radius: 0;
+            color: #FFFFFF;
           }
 
           #spc-help::before {
@@ -503,18 +494,18 @@
             position: fixed;
             inset: 0;
             z-index: -1;
-            background: var(--spc-help-backdrop);
+            background: rgba(0, 0, 68, 0.85);
           }
 
           #spc-help h2 {
             margin: 0 0 0.75rem;
             font-size: 1rem;
-            color: var(--spc-accent-strong);
+            color: #55FFFF;
           }
 
           #spc-help p {
             margin: 0 0 0.75rem;
-            color: var(--spc-text-dim);
+            color: #AAAAFF;
           }
 
           #spc-help dl {
@@ -525,24 +516,23 @@
           }
 
           #spc-help dt {
-            color: var(--spc-file);
+            color: #FFFF55;
             font-weight: 700;
           }
 
           #spc-help dd {
             margin: 0;
-            color: var(--spc-text);
+            color: #FFFFFF;
           }
 
           @media (max-width: 48rem) {
             #spc-overlay {
-              --spc-overlay-inset: 1rem;
-              padding: 0.75rem;
+              --spc-overlay-inset: 0.5rem;
             }
 
             .spc-row {
-              grid-template-columns: 1.25em auto minmax(0, 1fr);
-              gap: 0.5em;
+              grid-template-columns: 1.2em minmax(0, 1fr);
+              gap: 0.4em;
             }
 
             #spc-statusbar {
@@ -561,6 +551,13 @@
         </div>
         <ul id="${Config.listId}" role="listbox" aria-label="SharePoint items"></ul>
         <div id="${Config.statusId}" role="status" aria-live="polite"></div>
+        <div id="${Config.fnBarId}" aria-hidden="true">
+          <span><b>1</b>Help</span>
+          <span><b>3</b>View</span>
+          <span><b>5</b>Refresh</span>
+          <span><b>7</b>Filter</span>
+          <span><b>10</b>Quit</span>
+        </div>
         <section id="${Config.helpId}" aria-label="Keyboard help" hidden>
           <h2>Keyboard Help</h2>
           <p>Keyboard is the interface. Mouse is optional and unsupported.</p>
