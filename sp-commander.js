@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.1.0-scaffold',
+    version: '0.2.0',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -18,15 +18,16 @@
     zIndex: 2147483647,
   };
 
-  const MOCK_ITEMS = [
-    { name: 'Annual Reports', type: 'folder', url: '/Shared Documents/Annual Reports' },
-    { name: 'Contracts', type: 'folder', url: '/Shared Documents/Contracts' },
-    { name: 'HR Policies', type: 'folder', url: '/Shared Documents/HR Policies' },
-    { name: 'budget-2024.xlsx', type: 'file', url: '/Shared Documents/budget-2024.xlsx' },
-    { name: 'onboarding-guide.docx', type: 'file', url: '/Shared Documents/onboarding-guide.docx' },
-    { name: 'org-chart.pptx', type: 'file', url: '/Shared Documents/org-chart.pptx' },
-    { name: 'README.md', type: 'file', url: '/Shared Documents/README.md' },
-  ];
+  // SharePoint context — available on any SP page via _spPageContextInfo
+  const SPContext = (function() {
+    const ctx = window._spPageContextInfo || {};
+    return {
+      webAbsoluteUrl: (ctx.webAbsoluteUrl || ctx.siteAbsoluteUrl || window.location.origin).replace(/\/$/, ''),
+      webServerRelativeUrl: (ctx.webServerRelativeUrl || ctx.serverRelativeUrl || '/').replace(/\/$/, '') || '/',
+    };
+  })();
+
+  const Cache = new Map();
 
   // State
   const State = {
@@ -39,56 +40,123 @@
     statusMessage: '',
   };
 
-  // API stub
+  // API — real SharePoint REST calls, same-origin
   const Api = {
+    siteUrl: SPContext.webAbsoluteUrl,
+    webRoot: SPContext.webServerRelativeUrl,
+
     listItems: function(path) {
-      const nextPath = Api.normalizePath(path);
-      const items = nextPath === Config.rootPath
-        ? MOCK_ITEMS.slice()
-        : MOCK_ITEMS.map(function(item) {
+      const normalized = Api.normalizePath(path);
+      if (normalized === Api.webRoot) {
+        return Api.listLibraries();
+      }
+      return Api.listFolderContents(normalized);
+    },
+
+    listLibraries: function() {
+      const url = Api.siteUrl + '/_api/web/lists' +
+        '?$filter=BaseTemplate eq 101 and Hidden eq false' +
+        '&$select=Title,RootFolder/ServerRelativeUrl' +
+        '&$expand=RootFolder' +
+        '&$orderby=Title';
+      return Api._fetch(url).then(function(data) {
+        return (data.value || []).map(function(lib) {
+          return {
+            name: lib.Title,
+            type: 'folder',
+            url: lib.RootFolder.ServerRelativeUrl,
+            size: null,
+            modified: null,
+          };
+        });
+      });
+    },
+
+    listFolderContents: function(path) {
+      const encodedPath = encodeURIComponent(path.replace(/'/g, "''"));
+      const base = Api.siteUrl + '/_api/web/GetFolderByServerRelativeUrl(\'' + encodedPath + '\')';
+
+      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount&$orderby=Name';
+      const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified&$orderby=Name';
+
+      return Promise.all([Api._fetch(foldersUrl), Api._fetch(filesUrl)]).then(function(results) {
+        const folders = (results[0].value || [])
+          .filter(function(f) { return f.Name !== 'Forms'; })
+          .map(function(f) {
             return {
-              name: item.name,
-              type: item.type,
-              url: Api.joinPath(nextPath, item.name),
+              name: f.Name,
+              type: 'folder',
+              url: f.ServerRelativeUrl,
+              size: null,
+              modified: null,
             };
           });
 
-      return Promise.resolve(items);
+        const files = (results[1].value || []).map(function(f) {
+          return {
+            name: f.Name,
+            type: 'file',
+            url: f.ServerRelativeUrl,
+            size: f.Length != null ? Number(f.Length) : null,
+            modified: f.TimeLastModified || null,
+          };
+        });
+
+        return folders.concat(files);
+      });
+    },
+
+    _fetch: function(url) {
+      return fetch(url, {
+        headers: { 'Accept': 'application/json;odata=nometadata' },
+        credentials: 'same-origin',
+      }).then(function(resp) {
+        if (!resp.ok) {
+          throw new Error('HTTP ' + resp.status + ' — ' + url);
+        }
+        return resp.json();
+      });
     },
 
     normalizePath: function(path) {
       if (!path || path === '/') {
-        return Config.rootPath;
+        return Api.webRoot;
       }
 
       let normalized = String(path).trim();
       if (!normalized) {
-        return Config.rootPath;
+        return Api.webRoot;
       }
       if (normalized.charAt(0) !== '/') {
         normalized = '/' + normalized;
       }
       normalized = normalized.replace(/\/{2,}/g, '/');
       normalized = normalized.replace(/\/$/, '');
-      return normalized || Config.rootPath;
+      return normalized || Api.webRoot;
     },
 
     joinPath: function(base, name) {
       const normalizedBase = Api.normalizePath(base);
-      if (normalizedBase === Config.rootPath) {
-        return '/' + String(name).replace(/^\/+/, '');
+      if (normalizedBase === Api.webRoot) {
+        return Api.webRoot + '/' + String(name).replace(/^\/+/, '');
       }
       return normalizedBase + '/' + String(name).replace(/^\/+/, '');
     },
 
     getParentPath: function(path) {
       const normalized = Api.normalizePath(path);
-      if (normalized === Config.rootPath) {
-        return Config.rootPath;
+      if (normalized === Api.webRoot) {
+        return Api.webRoot;
       }
-      const parts = normalized.split('/').filter(Boolean);
-      parts.pop();
-      return parts.length ? '/' + parts.join('/') : Config.rootPath;
+      const lastSlash = normalized.lastIndexOf('/');
+      if (lastSlash <= 0) {
+        return Api.webRoot;
+      }
+      const parent = normalized.substring(0, lastSlash);
+      if (!parent || parent === Api.webRoot || parent.length < Api.webRoot.length) {
+        return Api.webRoot;
+      }
+      return parent;
     },
   };
 
@@ -666,8 +734,8 @@
       return;
     }
 
-    navigator.clipboard.writeText(item.url).then(function() {
-      setStatus('Copied ' + item.url);
+    navigator.clipboard.writeText(window.location.origin + item.url).then(function() {
+      setStatus('Copied ' + window.location.origin + item.url);
     }).catch(function() {
       setStatus('Clipboard write failed');
     });
@@ -694,16 +762,29 @@
     }
 
     State.path = nextPath;
-    setStatus(settings.message || 'Loading mock items');
+    setStatus(settings.message || 'Loading...');
     renderAll();
 
+    if (!settings.refresh && Cache.has(nextPath)) {
+      State.items = Cache.get(nextPath);
+      clampSelection(getFilteredItems());
+      setStatus(settings.successMessage || 'Loaded ' + State.items.length + ' items');
+      renderAll();
+      return Promise.resolve();
+    }
+
     return Api.listItems(nextPath).then(function(items) {
+      Cache.set(nextPath, items);
       State.items = items;
       clampSelection(getFilteredItems());
       setStatus(settings.successMessage || 'Loaded ' + items.length + ' items');
       renderAll();
-    }).catch(function() {
-      setStatus('Failed to load items');
+    }).catch(function(err) {
+      const msg = (window._spPageContextInfo === undefined)
+        ? 'Not a SharePoint page — API unavailable'
+        : 'Failed to load: ' + (err && err.message ? err.message : 'unknown error');
+      State.items = [];
+      setStatus(msg);
       renderAll();
     });
   }
@@ -755,7 +836,9 @@
   }
 
   function refreshItems() {
+    Cache.delete(State.path);
     loadPath(State.path, {
+      refresh: true,
       clearFilter: false,
       message: 'Refreshing',
       successMessage: 'Refreshed ' + State.path,
@@ -890,14 +973,26 @@
       return;
     }
 
-    State.items = MOCK_ITEMS.slice();
+    // Detect starting path: URL param 'id' → 'RootFolder' → SP web root
+    const params = new URLSearchParams(window.location.search);
+    const paramId = params.get('id');
+    const paramRf = params.get('RootFolder');
+    let startPath = Api.webRoot;
+    if (paramId && paramId.charAt(0) === '/') {
+      startPath = paramId;
+    } else if (paramRf && paramRf.charAt(0) === '/') {
+      startPath = paramRf;
+    }
+
+    State.items = [];
     State.selectedIndex = 0;
     State.filter = '';
     State.filterActive = false;
-    State.path = Config.rootPath;
+    State.path = Api.normalizePath(startPath);
     State.helpVisible = false;
-    State.statusMessage = 'Ready';
+    State.statusMessage = 'Loading...';
     renderOverlay();
+    loadPath(State.path, { message: 'Loading...' });
   }
 
   window.sp_commander = launch;
