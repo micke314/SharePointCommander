@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.2.4',
+    version: '0.2.5',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -76,8 +76,8 @@
       const encodedPath = encodeURIComponent(path.replace(/'/g, "''"));
       const base = Api.siteUrl + '/_api/web/GetFolderByServerRelativeUrl(\'' + encodedPath + '\')';
 
-      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount&$orderby=Name';
-      const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified&$orderby=Name';
+      const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount,TimeLastModified&$orderby=Name';
+      const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified,ModifiedBy/Title&$expand=ModifiedBy&$orderby=Name';
 
       return Promise.all([Api._fetch(foldersUrl), Api._fetch(filesUrl)]).then(function(results) {
         const folders = (results[0].value || [])
@@ -88,7 +88,9 @@
               type: 'folder',
               url: f.ServerRelativeUrl,
               size: null,
-              modified: null,
+              itemCount: f.ItemCount != null ? Number(f.ItemCount) : null,
+              modified: f.TimeLastModified || null,
+              modifiedBy: null,
             };
           });
 
@@ -98,7 +100,9 @@
             type: 'file',
             url: f.ServerRelativeUrl,
             size: f.Length != null ? Number(f.Length) : null,
+            itemCount: null,
             modified: f.TimeLastModified || null,
+            modifiedBy: (f.ModifiedBy && f.ModifiedBy.Title) ? f.ModifiedBy.Title : null,
           };
         });
 
@@ -161,6 +165,24 @@
   };
 
   // Render
+  function formatDate(isoStr) {
+    if (!isoStr) return '';
+    try {
+      var d = new Date(isoStr);
+      var y = d.getFullYear();
+      var m = String(d.getMonth() + 1).padStart(2, '0');
+      var day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  function formatModifiedBy(name) {
+    if (!name) return '';
+    return name.length > 14 ? name.slice(0, 13) + '…' : name;
+  }
+
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, function(char) {
       return {
@@ -257,9 +279,21 @@
       const kindClass = item.type === 'folder' ? 'spc-kind--folder'
                       : item.type === 'parent' ? 'spc-kind--parent'
                       : 'spc-kind--file';
+      const countCell = (item.type === 'folder' && item.itemCount != null)
+        ? escapeHtml(String(item.itemCount))
+        : '';
+      const dateCell  = (item.type !== 'parent' && item.modified)
+        ? escapeHtml(formatDate(item.modified))
+        : '';
+      const byCell    = (item.type !== 'parent' && item.modifiedBy)
+        ? escapeHtml(formatModifiedBy(item.modifiedBy))
+        : '';
       return '' +
         '<li class="spc-row ' + kindClass + '" role="option" aria-selected="' + (isSelected ? 'true' : 'false') + '" data-index="' + index + '">' +
           '<span class="spc-name">' + escapeHtml(item.name) + '</span>' +
+          '<span class="spc-meta-count">' + countCell + '</span>' +
+          '<span class="spc-meta-date">' + dateCell + '</span>' +
+          '<span class="spc-meta-by">' + byCell + '</span>' +
         '</li>';
     }).join('');
 
@@ -349,7 +383,7 @@
             inset: var(--spc-overlay-inset);
             z-index: var(--spc-z);
             display: grid;
-            grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+            grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
             gap: 0;
             padding: 0;
             background: #0000AA;
@@ -428,8 +462,46 @@
             opacity: 0.6;
           }
 
-          #spc-list {
+          #spc-colheader {
             grid-row: 3;
+            display: grid;
+            grid-template-columns: 1.2em minmax(0, 1fr) 5em 10em 11em;
+            gap: 0.5em;
+            padding: 0.15rem 0.5rem;
+            background: #000055;
+            border-bottom: 1px solid #55FFFF;
+            color: #55FFFF;
+            font-weight: bold;
+            user-select: none;
+          }
+
+          #spc-colheader .spc-ch-name {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          #spc-colheader .spc-ch-count,
+          #spc-colheader .spc-ch-date,
+          #spc-colheader .spc-ch-by {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          #spc-colheader .spc-ch-count {
+            text-align: right;
+          }
+
+          #spc-colheader .spc-ch-date,
+          #spc-colheader .spc-ch-by {
+            text-align: left;
+            padding-left: 0.3em;
+          }
+
+          #spc-list {
+            grid-row: 4;
             position: relative;
             min-height: 0;
             margin: 0;
@@ -458,7 +530,7 @@
 
           .spc-row {
             display: grid;
-            grid-template-columns: 1.2em minmax(0, 1fr);
+            grid-template-columns: 1.2em minmax(0, 1fr) 5em 10em 11em;
             align-items: center;
             gap: 0.5em;
             min-height: 1.4rem;
@@ -519,13 +591,37 @@
             white-space: nowrap;
           }
 
+          .spc-meta-count,
+          .spc-meta-date,
+          .spc-meta-by {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: #55FFFF;
+          }
+
+          .spc-meta-count {
+            text-align: right;
+          }
+
+          .spc-meta-date,
+          .spc-meta-by {
+            padding-left: 0.3em;
+          }
+
+          .spc-row[aria-selected='true'] .spc-meta-count,
+          .spc-row[aria-selected='true'] .spc-meta-date,
+          .spc-row[aria-selected='true'] .spc-meta-by {
+            color: #000055;
+          }
+
           .spc-meta {
             justify-self: end;
             color: #55FFFF;
           }
 
           #spc-statusbar {
-            grid-row: 4;
+            grid-row: 5;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -551,7 +647,7 @@
           }
 
           #spc-fnbar {
-            grid-row: 5;
+            grid-row: 6;
             display: flex;
             gap: 0;
             background: #000000;
@@ -648,6 +744,13 @@
         <div id="${Config.filterBarId}" hidden>
           <span class="spc-label">FILTER</span>
           <input id="${Config.filterId}" type="text" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type to filter current folder" aria-label="Filter current folder" />
+        </div>
+        <div id="spc-colheader" aria-hidden="true">
+          <span></span>
+          <span class="spc-ch-name">Name</span>
+          <span class="spc-ch-count">#</span>
+          <span class="spc-ch-date">Modified</span>
+          <span class="spc-ch-by">By</span>
         </div>
         <ul id="${Config.listId}" role="listbox" aria-label="SharePoint items"></ul>
         <div id="${Config.statusId}" role="status" aria-live="polite"></div>
