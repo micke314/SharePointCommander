@@ -121,4 +121,4 @@ Active development happens on the `dev` branch. The bookmarklet above points to 
 
 ## Version
 
-Current version: `0.2.0`
+Current version: `0.2.4`
