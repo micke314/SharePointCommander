@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.1',
+    version: '0.3.2',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -865,16 +865,17 @@
     const selected = list && list.querySelector('.spc-selected');
     if (!list || !selected) return;
 
-    const listTop = list.scrollTop;
-    const listBottom = listTop + list.clientHeight;
-    const itemTop = selected.offsetTop;
-    const itemBottom = itemTop + selected.offsetHeight;
+    const listRect = list.getBoundingClientRect();
+    const itemRect = selected.getBoundingClientRect();
 
-    if (itemBottom > listBottom) {
-      list.scrollTop = itemBottom - list.clientHeight;
-    } else if (itemTop < listTop) {
-      list.scrollTop = itemTop;
+    if (itemRect.bottom > listRect.bottom) {
+      // Item is below visible area — scroll down just enough
+      list.scrollTop += itemRect.bottom - listRect.bottom;
+    } else if (itemRect.top < listRect.top) {
+      // Item is above visible area — scroll up just enough
+      list.scrollTop -= listRect.top - itemRect.top;
     }
+    // If item is fully visible, do nothing
   }
 
   function openItem(item) {
@@ -1077,14 +1078,26 @@
         event.preventDefault();
         moveSelection(Infinity);
         break;
-      case 'PageUp':
+      case 'PageUp': {
         event.preventDefault();
-        moveSelection(-10);
+        const listUp = document.getElementById('spc-list');
+        const firstRowUp = listUp && listUp.querySelector('.spc-row');
+        const pageSizeUp = (listUp && firstRowUp)
+          ? Math.max(1, Math.floor(listUp.clientHeight / firstRowUp.offsetHeight))
+          : 10;
+        moveSelection(-pageSizeUp);
         break;
-      case 'PageDown':
+      }
+      case 'PageDown': {
         event.preventDefault();
-        moveSelection(10);
+        const listDn = document.getElementById('spc-list');
+        const firstRowDn = listDn && listDn.querySelector('.spc-row');
+        const pageSizeDn = (listDn && firstRowDn)
+          ? Math.max(1, Math.floor(listDn.clientHeight / firstRowDn.offsetHeight))
+          : 10;
+        moveSelection(pageSizeDn);
         break;
+      }
       case 'Enter':
         event.preventDefault();
         navigateToSelected();
