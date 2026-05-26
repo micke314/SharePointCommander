@@ -64,19 +64,12 @@ If `raw.githubusercontent.com` is blocked by your tenant's CSP, upload `sp-comma
 | Key | Action |
 |-----|--------|
 | `↑` / `↓` | Move selection |
+| `Page Up` / `Page Down` | Move selection one page at a time |
+| `Home` | Jump to first item |
+| `End` | Jump to last item |
 | `Enter` | Open folder / open file in new tab |
 | `Backspace` | Go to parent folder |
 | `ESC` | Close overlay |
-| `/` | Filter files in current folder |
-| `g` | Jump to any path |
-| `o` | Open selected file in new tab |
-| `Ctrl+L` | Copy link to selected item |
-| `r` | Refresh current folder |
-| `?` | Toggle keyboard help |
-| `F1` / `1` | Toggle keyboard help |
-| `F5` / `5` | Refresh |
-| `F7` / `7` | Toggle filter |
-| `F10` / `10` | Close overlay |
 
 ---
 
