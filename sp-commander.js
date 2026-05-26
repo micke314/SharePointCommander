@@ -3,7 +3,7 @@
 
   // Config
   const Config = {
-    version: '0.3.7',
+    version: '0.3.8',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
@@ -57,24 +57,25 @@
       const url = Api.siteUrl + '/_api/web/lists' +
         '?$filter=BaseTemplate eq 101 and Hidden eq false' +
         '&$select=Title,RootFolder/ServerRelativeUrl' +
-        '&$expand=RootFolder' +
-        '&$orderby=Title';
+        '&$expand=RootFolder';
       return Api._fetch(url).then(function(data) {
-        return (data.value || []).map(function(lib) {
-          return {
-            name: lib.Title,
-            type: 'folder',
-            url: lib.RootFolder.ServerRelativeUrl,
-            size: null,
-            modified: null,
-          };
-        });
+        return (data.value || [])
+          .sort(function(a, b) { return a.Title.localeCompare(b.Title); })
+          .map(function(lib) {
+            return {
+              name: lib.Title,
+              type: 'folder',
+              url: lib.RootFolder.ServerRelativeUrl,
+              size: null,
+              modified: null,
+            };
+          });
       });
     },
 
     listFolderContents: function(path) {
-      const encodedPath = encodeURIComponent(path.replace(/'/g, "''"));
-      const base = Api.siteUrl + '/_api/web/GetFolderByServerRelativeUrl(\'' + encodedPath + '\')';
+      const escapedPath = path.replace(/'/g, "''");
+      const base = Api.siteUrl + '/_api/web/GetFolderByServerRelativeUrl(\'' + escapedPath + '\')';
 
       const foldersUrl = base + '/Folders?$select=Name,ServerRelativeUrl,ItemCount,TimeLastModified,ListItemAllFields/Editor/Title&$expand=ListItemAllFields/Editor&$orderby=Name';
       const filesUrl   = base + '/Files?$select=Name,ServerRelativeUrl,Length,TimeLastModified,ModifiedBy/Title&$expand=ModifiedBy&$orderby=Name';
