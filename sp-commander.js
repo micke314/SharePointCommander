@@ -852,7 +852,7 @@
   }
 
   function moveSelection(step) {
-    const items = getFilteredItems();
+    const items = getDisplayItems();
     if (!items.length) {
       State.selectedIndex = 0;
       renderList();
