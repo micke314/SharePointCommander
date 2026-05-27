@@ -69,7 +69,13 @@ If `raw.githubusercontent.com` is blocked by your tenant's CSP, upload `sp-comma
 | `End` | Jump to last item |
 | `Enter` | Open folder / open file in new tab |
 | `Backspace` | Go to parent folder |
-| `ESC` | Close overlay |
+| `/` | Activate filter |
+| `g` / `G` | Jump to path |
+| `o` / `O` | Open file in new tab |
+| `r` / `R` | Refresh current folder |
+| `?` | Toggle help panel |
+| `Ctrl+L` | Copy selected item URL to clipboard |
+| `ESC` | Close overlay / clear filter / close help panel |
 
 ---
 
