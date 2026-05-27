@@ -1,5 +1,17 @@
 # Decisions Log
 
+## 2026-05-27 — User Directive
+
+### Micke Push-Always Directive
+
+**From:** Micke  
+**Date:** 2026-05-27T08:45:20+02:00  
+**Status:** ✅ DECIDED
+
+Always push to GitHub after commits — no need to ask. Captured for team memory.
+
+---
+
 ## 2026-05-26 — Iteration 1 Bug Fixes & Bookmarklet
 
 ### Diana Iteration 1 Code Audit Findings
