@@ -7,6 +7,7 @@
 - 2026-05-26T14:05:06.305+02:00 — Matched the injected overlay markup to Minerva's CSS contract (`#spc-pathbar`, `#spc-filterbar`, `#spc-statusbar`, `aria-selected`, kind modifiers) so the inlined styles and DOM stay locked together.
 - 2026-05-26T14:05:06.305+02:00 — Focus recovery must return to the active control, not just the overlay root: in filter mode the input gets focus back, while Esc now unwinds filter → help → overlay in the right order.
 - 2026-05-26T14:09:31.683+02:00 — A GitHub-hosted bookmarklet loader should stay as a single-line `javascript:` IIFE with `Date.now()` cache busting, while the DevTools variant can stay readable and include a load confirmation.
+- 2026-05-27T09:41:35.048+02:00 — `Ctrl+L` should copy a browser-openable absolute URL: append `?web=1` only for files, keep folders/parent on their plain server-relative path, and keep the status text short so the NC overlay width stays stable.
 
 ## Project Context (Day 1)
 

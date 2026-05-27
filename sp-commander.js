@@ -429,7 +429,7 @@
       ? visible + '/' + total + ' match' + (visible === 1 ? '' : 'es') + ' for "' + State.filter + '"'
       : total + ' item' + (total === 1 ? '' : 's');
     const main = State.statusMessage ? summary + ' · ' + State.statusMessage : summary;
-    const meta = 'v' + Config.version + ' · ↑/↓ move · Home/End · PgUp/PgDn · Enter open · ? help';
+    const meta = 'v' + Config.version + ' · ? help';
 
     statusEl.innerHTML = '' +
       '<span class="spc-status-main">' + escapeHtml(main) + '</span>' +
@@ -1027,8 +1027,10 @@
       return;
     }
 
-    navigator.clipboard.writeText(window.location.origin + item.url).then(function() {
-      setStatus('Copied ' + window.location.origin + item.url);
+    const itemPath = item.type === 'parent' ? Api.getParentPath(State.path) : item.url;
+    const copyUrl = window.location.origin + itemPath + (item.type === 'file' ? '?web=1' : '');
+    navigator.clipboard.writeText(copyUrl).then(function() {
+      setStatus('Link copied');
     }).catch(function() {
       setStatus('Clipboard write failed');
     });
