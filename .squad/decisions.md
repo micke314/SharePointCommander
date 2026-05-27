@@ -1,5 +1,46 @@
 # Decisions Log
 
+## 2026-05-27 — Playwright Tests & Sortable Columns
+
+### Diana Playwright E2E Repo Created
+
+**From:** Diana (QA / Tester)  
+**Date:** 2026-05-27T09:02:11+02:00  
+**Status:** ✅ DONE
+
+**New Repo:**
+- Local: `/home/micke/hackathon/SharePointCommander-tests/`
+- GitHub: https://github.com/micke314/SharePointCommander-tests
+- Visibility: Public
+
+**Test Structure:**
+```
+tests/
+  smoke.spec.ts               Overlay lifecycle, Escape regression (BUG-1, BUG-2)
+  keyboard-navigation.spec.ts Keyboard shortcuts + End/PageDown off-by-one regression
+  file-listing.spec.ts        Parent entry, folder nav, back-nav, live filter
+```
+
+**Key Coverage:** End key lands on last item (commit `3fc12ce` regression), Escape closes help/filter correctly, duplicate-launch guard, parent entry display, live filtering.
+
+---
+
+### Vulcan Sortable Columns
+
+**From:** Vulcan (Frontend Engineer)  
+**Date:** 2026-05-27T09:05:44+02:00  
+**Issue:** #10  
+**Status:** ✅ DONE
+
+**Changes:**
+- Sort state stored in `State` as `{ column, direction }` (default: name ascending)
+- Client-side sorting in `getFilteredItems()` reused by all render paths
+- Folders sorted independently from files (folders-first collation)
+- Column header click toggles sort direction; active column shows `▲` or `▼`
+- Sort resets to name/asc when path changes
+
+---
+
 ## 2026-05-27 — User Directive
 
 ### Micke Push-Always Directive

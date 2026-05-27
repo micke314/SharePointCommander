@@ -1,5 +1,6 @@
 ## Learnings
 
+- 2026-05-27T07:10:33Z — Implemented sortable columns (name/size/date) with folder-first sorting, click-to-toggle headers (▲/▼), and reset on navigation. Version bumped to 0.3.12. Commit 325a86a. Closes #10.
 - 2026-05-26T13:53:12.170+02:00 — Kept the scaffold as a single IIFE with one overlay-level `keydown` dispatcher so focus stays trapped without touching `document` listeners.
 - 2026-05-26T13:53:12.170+02:00 — Mock navigation reuses the same static dataset but rewrites child URLs from the current path, which keeps folder/file behavior testable before live SharePoint API wiring exists.
 - 2026-05-26T13:53:12.170+02:00 — Limited repeat DOM churn to `#spc-list` innerHTML updates while path, status, filter, and help are patched surgically on existing nodes.
@@ -28,3 +29,7 @@
 - 2026-05-26T14:29:31.616+02:00 — Selected row now uses solid #55FFFF bg / #000000 text (NC highlight bar) instead of the previous left-border inset approach.
 - 2026-05-26T14:29:31.616+02:00 — renderPathBar() now wraps path in NC-style [ ] brackets.
 - 2026-05-26T14:29:31.616+02:00 — Row height tightened to 1.4rem with 0.1rem vertical padding — NC panels are dense and tabular, not spacious.
+- 2026-05-26T14:37:39.230+02:00 — SPContext is resolved once at module init from window._spPageContextInfo; all API calls use webAbsoluteUrl as base so sub-sites work without any path arithmetic.
+- 2026-05-26T14:37:39.230+02:00 — Site-root view (path === webServerRelativeUrl) lists document libraries via /_api/web/lists with BaseTemplate eq 101 filter; deeper paths use GetFolderByServerRelativeUrl with parallel Folders + Files fetches merged folders-first.
+- 2026-05-26T14:37:39.230+02:00 — Cache (Map keyed by server-relative path) short-circuits repeated navigation; refresh explicitly deletes the entry before re-fetching.
+- 2026-05-26T14:37:39.230+02:00 — Starting path is detected from ?id= or ?RootFolder= URL params (modern/classic SP library views), falling back to webServerRelativeUrl so the tool always opens in context.
