@@ -1,5 +1,16 @@
 ## Learnings
 
+### 2026-05-27 — Keyboard Navigation Off-by-One Bug Fix
+
+**File:** `sp-commander.js`  
+**Function:** `moveSelection()` (line 855)
+
+**Root cause:** `moveSelection()` called `getFilteredItems()` to determine the valid `selectedIndex` range. But the rendered list is built by `getDisplayItems()`, which prepends a `PARENT_ITEM` (`..`) entry when not filtering. This made the display list N+1 items long while `moveSelection` capped the index at N−1 — so the last file was permanently unreachable via End, ArrowDown, and PageDown.
+
+**Fix:** One-line change — replaced `getFilteredItems()` with `getDisplayItems()` in `moveSelection()` so the index bounds match the actual rendered rows.
+
+**Key insight:** `getFilteredItems()` and `getDisplayItems()` are not interchangeable. Anywhere that computes selection bounds from the rendered row count must use `getDisplayItems()`, not `getFilteredItems()`.
+
 ### 2026-05-26 — CSP Bookmarklet Loader Fix
 
 **CSP constraint discovery:**
