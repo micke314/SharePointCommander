@@ -3,12 +3,13 @@
 
   // Config
   const Config = {
-    version: '0.3.11',
+    version: '0.3.12',
     overlayId: 'spc-overlay',
     pathBarId: 'spc-pathbar',
     pathId: 'spc-current-path',
     filterBarId: 'spc-filterbar',
     filterId: 'spc-filter-input',
+    columnHeaderId: 'spc-colheader',
     listId: 'spc-list',
     statusId: 'spc-statusbar',
     helpId: 'spc-help',
@@ -38,6 +39,8 @@
     path: '/',
     helpVisible: false,
     statusMessage: '',
+    sortColumn: 'name',
+    sortDirection: 'asc',
   };
 
   // API — real SharePoint REST calls, same-origin
@@ -228,15 +231,72 @@
 
   var PARENT_ITEM = { type: 'parent', name: '..', url: null };
 
-  function getFilteredItems() {
-    if (!State.filter) {
-      return State.items.slice();
+  function compareNames(a, b) {
+    return String(a || '').localeCompare(String(b || ''), undefined, { sensitivity: 'base' });
+  }
+
+  function getSortValue(item, column) {
+    if (column === 'size') {
+      if (item.type === 'folder') {
+        return item.itemCount != null ? Number(item.itemCount) : 0;
+      }
+      return item.size != null ? Number(item.size) : 0;
+    }
+    if (column === 'modified') {
+      const timestamp = Date.parse(item.modified || '');
+      return Number.isNaN(timestamp) ? 0 : timestamp;
+    }
+    return item.name || '';
+  }
+
+  function compareSortedItems(a, b) {
+    let result = 0;
+
+    if (State.sortColumn === 'size' || State.sortColumn === 'modified') {
+      result = getSortValue(a, State.sortColumn) - getSortValue(b, State.sortColumn);
+    } else {
+      result = compareNames(getSortValue(a, 'name'), getSortValue(b, 'name'));
     }
 
-    const needle = State.filter.toLowerCase();
-    return State.items.filter(function(item) {
-      return item.name.toLowerCase().indexOf(needle) !== -1;
+    if (result !== 0 && State.sortDirection === 'desc') {
+      result *= -1;
+    }
+
+    if (result !== 0) {
+      return result;
+    }
+
+    result = compareNames(a.name, b.name);
+    if (result !== 0) {
+      return result;
+    }
+
+    return compareNames(a.url, b.url);
+  }
+
+  function sortItems(items) {
+    const folders = [];
+    const files = [];
+
+    items.forEach(function(item) {
+      if (item.type === 'folder') {
+        folders.push(item);
+      } else {
+        files.push(item);
+      }
     });
+
+    return folders.slice().sort(compareSortedItems).concat(files.slice().sort(compareSortedItems));
+  }
+
+  function getFilteredItems() {
+    const filteredItems = !State.filter
+      ? State.items.slice()
+      : State.items.filter(function(item) {
+          return item.name.toLowerCase().indexOf(State.filter.toLowerCase()) !== -1;
+        });
+
+    return sortItems(filteredItems);
   }
 
   function getDisplayItems() {
@@ -269,6 +329,29 @@
     const items = getDisplayItems();
     clampSelection(items);
     return items[State.selectedIndex] || null;
+  }
+
+  function renderColumnHeader() {
+    const headerEl = document.getElementById(Config.columnHeaderId);
+    if (!headerEl) {
+      return;
+    }
+
+    function renderHeaderCell(label, column, className) {
+      const isActive = State.sortColumn === column;
+      const indicator = isActive ? (State.sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
+      return '' +
+        '<button type="button" class="spc-ch-button ' + className + (isActive ? ' is-active' : '') + '" data-sort-column="' + column + '">' +
+          '<span>' + escapeHtml(label + indicator) + '</span>' +
+        '</button>';
+    }
+
+    headerEl.innerHTML = '' +
+      '<span></span>' +
+      renderHeaderCell('Name', 'name', 'spc-ch-name') +
+      renderHeaderCell('Size', 'size', 'spc-ch-count') +
+      renderHeaderCell('Modified', 'modified', 'spc-ch-date') +
+      '<span class="spc-ch-by">By</span>';
   }
 
   function renderList() {
@@ -489,19 +572,28 @@
             user-select: none;
           }
 
-          #spc-colheader .spc-ch-name {
+          #spc-colheader .spc-ch-button,
+          #spc-colheader .spc-ch-by {
             min-width: 0;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
           }
 
-          #spc-colheader .spc-ch-count,
-          #spc-colheader .spc-ch-date,
-          #spc-colheader .spc-ch-by {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+          #spc-colheader .spc-ch-button {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            font-weight: inherit;
+            cursor: pointer;
+          }
+
+          #spc-colheader .spc-ch-button:hover,
+          #spc-colheader .spc-ch-button.is-active {
+            color: #FFFFFF;
           }
 
           #spc-colheader .spc-ch-count {
@@ -759,13 +851,7 @@
           <span class="spc-label">FILTER</span>
           <input id="${Config.filterId}" type="text" inputmode="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Type to filter current folder" aria-label="Filter current folder" />
         </div>
-        <div id="spc-colheader" aria-hidden="true">
-          <span></span>
-          <span class="spc-ch-name">Name</span>
-          <span class="spc-ch-count"># / Size</span>
-          <span class="spc-ch-date">Modified</span>
-          <span class="spc-ch-by">By</span>
-        </div>
+        <div id="${Config.columnHeaderId}"></div>
         <ul id="${Config.listId}" role="listbox" aria-label="SharePoint items"></ul>
         <div id="${Config.statusId}" role="status" aria-live="polite"></div>
         <div id="${Config.fnBarId}" aria-hidden="true">
@@ -798,11 +884,15 @@
       const inputEl = overlayEl.querySelector('#' + Config.filterId);
       inputEl.addEventListener('input', onFilterInput);
 
+      const headerEl = overlayEl.querySelector('#' + Config.columnHeaderId);
+      headerEl.addEventListener('click', onColumnHeaderClick);
+
       (document.body || document.documentElement).appendChild(overlayEl);
     }
 
     renderPathBar();
     renderFilter();
+    renderColumnHeader();
     renderHelpPanel();
     renderList();
     focusActiveTarget();
@@ -811,6 +901,7 @@
   function renderAll() {
     renderPathBar();
     renderFilter();
+    renderColumnHeader();
     renderHelpPanel();
     renderList();
   }
@@ -849,6 +940,27 @@
     State.filter = event.target.value;
     State.selectedIndex = 0;
     renderList();
+  }
+
+  function setSort(column) {
+    if (State.sortColumn === column) {
+      State.sortDirection = State.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      State.sortColumn = column;
+      State.sortDirection = 'asc';
+    }
+    State.selectedIndex = 0;
+    renderAll();
+  }
+
+  function onColumnHeaderClick(event) {
+    const button = event.target.closest('[data-sort-column]');
+    if (!button) {
+      return;
+    }
+
+    setSort(button.getAttribute('data-sort-column'));
+    focusActiveTarget();
   }
 
   function moveSelection(step) {
@@ -929,17 +1041,26 @@
     }
   }
 
-  function resetNavigationState() {
+  function resetSortState() {
+    State.sortColumn = 'name';
+    State.sortDirection = 'asc';
+  }
+
+  function resetNavigationState(pathChanged) {
     clearFilter();
     State.selectedIndex = 0;
+    if (pathChanged) {
+      resetSortState();
+    }
   }
 
   function loadPath(path, options) {
     const settings = options || {};
     const nextPath = Api.normalizePath(path);
+    const pathChanged = nextPath !== State.path;
 
     if (settings.clearFilter) {
-      resetNavigationState();
+      resetNavigationState(pathChanged);
     }
 
     State.path = nextPath;
@@ -1205,6 +1326,7 @@
     State.path = Api.normalizePath(startPath);
     State.helpVisible = false;
     State.statusMessage = 'Loading...';
+    resetSortState();
     renderOverlay();
     loadPath(State.path, { message: 'Loading...' });
   }
